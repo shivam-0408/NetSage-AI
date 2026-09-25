@@ -1,0 +1,1415 @@
+import sys
+import os
+import json
+from datetime import datetime
+
+
+# ============================================================
+# NetSage AI - Integrated Phase 7 Pipeline
+# ============================================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+PARSER_DIR = os.path.join(BASE_DIR, "parser")
+ENGINE_DIR = os.path.join(BASE_DIR, "engine")
+CHECKER_DIR = os.path.join(BASE_DIR, "checker")
+VERIFIER_DIR = os.path.join(BASE_DIR, "verifier")
+DECISION_DIR = os.path.join(BASE_DIR, "decision")
+
+sys.path.insert(0, PARSER_DIR)
+sys.path.insert(0, ENGINE_DIR)
+sys.path.insert(0, CHECKER_DIR)
+sys.path.insert(0, VERIFIER_DIR)
+sys.path.insert(0, DECISION_DIR)
+
+
+# ============================================================
+# IMPORT EXISTING PHASES
+# ============================================================
+
+from packet_parser import parse_output
+from netsage_engine import find_best_case, load_cases
+from human_review import human_review
+from verification_engine import verify_recommendation
+
+
+# ============================================================
+# OPTIONAL PHASE 6 AUDIT LOGGER
+# ============================================================
+
+try:
+    from audit_logger import save_audit_record
+    AUDIT_AVAILABLE = True
+except ImportError:
+    AUDIT_AVAILABLE = False
+
+
+# ============================================================
+# PHASE 7 - DECISION INTELLIGENCE
+# ============================================================
+
+def normalize_text(value):
+
+    if value is None:
+        return ""
+
+    if isinstance(value, (dict, list)):
+        value = json.dumps(value)
+
+    return str(value).lower()
+
+
+def calculate_case_similarity(evidence_text, case):
+
+    text = normalize_text(evidence_text)
+
+    score = 0
+
+    # Problem
+    problem = case.get("problem", "")
+
+    for word in normalize_text(problem).split():
+
+        if len(word) > 3 and word in text:
+            score += 1
+
+    # Symptoms
+    for symptom in case.get("symptoms", []):
+
+        matches = 0
+
+        for word in normalize_text(symptom).split():
+
+            if len(word) > 3 and word in text:
+                matches += 1
+
+        if matches >= 2:
+            score += 3
+
+    # Show commands
+    for command_name, command_output in case.get(
+        "show_commands", {}
+    ).items():
+
+        matches = 0
+
+        for word in normalize_text(command_output).split():
+
+            if len(word) > 3 and word in text:
+                matches += 1
+
+        if matches >= 2:
+            score += 4
+
+    return score
+
+
+def build_evidence_graph(evidence, diagnosis):
+
+    nodes = []
+    relationships = []
+    supporting = []
+    contradictions = []
+
+    # --------------------------------------------------------
+    # Ping evidence
+    # --------------------------------------------------------
+
+    for ping in evidence.get("pings", []):
+
+        destination = ping.get("destination", "unknown")
+        status = ping.get("status", "unknown")
+        loss = ping.get("loss_percentage", 0)
+
+        node = {
+            "type": "ping",
+            "destination": destination,
+            "status": status,
+            "loss": loss
+        }
+
+        nodes.append(node)
+
+        if status.lower() != "success":
+
+            supporting.append(
+                f"Ping failure detected for {destination}"
+            )
+
+        if loss == 0:
+
+            relationships.append(
+                f"{destination} is reachable"
+            )
+
+    # --------------------------------------------------------
+    # Interface evidence
+    # --------------------------------------------------------
+
+    for interface in evidence.get("interfaces", []):
+
+        name = interface.get("interface", "")
+        status = interface.get("status", "")
+        protocol = interface.get("protocol", "")
+
+        nodes.append({
+            "type": "interface",
+            "interface": name,
+            "status": status,
+            "protocol": protocol
+        })
+
+        if "administratively down" in status.lower():
+
+            supporting.append(
+                f"{name} is administratively down"
+            )
+
+        if status.lower() == "up" and protocol.lower() == "up":
+
+            relationships.append(
+                f"{name} is operationally up"
+            )
+
+    # --------------------------------------------------------
+    # VLAN evidence
+    # --------------------------------------------------------
+
+    for vlan in evidence.get("vlans", []):
+
+        vlan_id = vlan.get("vlan_id", "")
+        status = vlan.get("status", "")
+
+        nodes.append({
+            "type": "vlan",
+            "vlan_id": vlan_id,
+            "status": status
+        })
+
+        if str(status).lower() == "active":
+
+            supporting.append(
+                f"VLAN {vlan_id} is active"
+            )
+
+    # --------------------------------------------------------
+    # Trunk evidence
+    # --------------------------------------------------------
+
+    trunk = evidence.get("trunk", {})
+
+    if trunk.get("is_trunk"):
+
+        nodes.append({
+            "type": "trunk",
+            "ports": trunk.get("ports", []),
+            "allowed_vlans": trunk.get("allowed_vlans", ""),
+            "active_vlans": trunk.get("active_vlans", "")
+        })
+
+        relationships.append(
+            "Active trunk detected"
+        )
+
+        active_vlans = str(
+            trunk.get("active_vlans", "")
+        )
+
+        if "30" in active_vlans:
+
+            supporting.append(
+                "VLAN 30 is active on the trunk"
+            )
+
+    # --------------------------------------------------------
+    # Diagnosis relationship
+    # --------------------------------------------------------
+
+    if diagnosis:
+
+        nodes.append({
+            "type": "diagnosis",
+            "case_id": diagnosis.get("case_id", "UNKNOWN")
+        })
+
+        relationships.append(
+            "Network evidence supports selected diagnosis"
+        )
+
+    return {
+        "nodes": nodes,
+        "relationships": relationships,
+        "supporting_evidence": supporting,
+        "contradictions": contradictions
+    }
+
+
+def calculate_phase7_confidence(
+    selected_score,
+    competing_scores,
+    graph
+):
+
+    # --------------------------------------------------------
+    # Match strength
+    # --------------------------------------------------------
+
+    if selected_score <= 0:
+
+        match_strength = 0
+
+    else:
+
+        match_strength = min(
+            100,
+            round(
+                selected_score /
+                max(selected_score, 1) *
+                92
+            )
+        )
+
+    # --------------------------------------------------------
+    # Evidence strength
+    # --------------------------------------------------------
+
+    supporting = len(
+        graph.get("supporting_evidence", [])
+    )
+
+    contradictions = len(
+        graph.get("contradictions", [])
+    )
+
+    evidence_strength = min(
+        100,
+        40 + (supporting * 10) - (contradictions * 15)
+    )
+
+    evidence_strength = max(
+        0,
+        evidence_strength
+    )
+
+    # --------------------------------------------------------
+    # Diagnostic separation
+    # --------------------------------------------------------
+
+    if len(competing_scores) <= 1:
+
+        separation = 100
+
+    else:
+
+        ordered = sorted(
+            competing_scores,
+            reverse=True
+        )
+
+        first = ordered[0]
+        second = ordered[1]
+
+        if first == 0:
+
+            separation = 0
+
+        else:
+
+            separation = round(
+                ((first - second) / first) * 100
+            )
+
+    separation = max(
+        0,
+        min(100, separation)
+    )
+
+    # --------------------------------------------------------
+    # Contradiction penalty
+    # --------------------------------------------------------
+
+    contradiction_penalty = min(
+        30,
+        contradictions * 10
+    )
+
+    # --------------------------------------------------------
+    # Overall confidence
+    # --------------------------------------------------------
+
+    overall = round(
+        (
+            match_strength * 0.40
+            +
+            evidence_strength * 0.40
+            +
+            separation * 0.20
+        )
+        - contradiction_penalty
+    )
+
+    overall = max(
+        0,
+        min(100, overall)
+    )
+
+    if overall >= 80:
+
+        level = "HIGH"
+
+    elif overall >= 60:
+
+        level = "MODERATE"
+
+    else:
+
+        level = "LOW"
+
+    return {
+        "overall": overall,
+        "level": level,
+        "match_strength": match_strength,
+        "evidence_strength": evidence_strength,
+        "diagnostic_separation": separation,
+        "supporting_evidence": supporting,
+        "exclusion_evidence": len(
+            graph.get("relationships", [])
+        ),
+        "contradicting_evidence": contradictions,
+        "contradiction_penalty": contradiction_penalty
+    }
+
+
+def run_phase7_decision(
+    evidence,
+    diagnosis,
+    cases,
+    selected_score
+):
+
+    print()
+    print("=" * 60)
+    print("              PHASE 7 DECISION INTELLIGENCE")
+    print("=" * 60)
+
+    # --------------------------------------------------------
+    # Convert evidence to searchable text
+    # --------------------------------------------------------
+
+    evidence_text = json.dumps(
+        evidence,
+        default=str
+    )
+
+    # --------------------------------------------------------
+    # Score all cases
+    # --------------------------------------------------------
+
+    case_results = []
+
+    for case in cases:
+
+        score = calculate_case_similarity(
+            evidence_text,
+            case
+        )
+
+        case_results.append({
+            "case": case,
+            "score": score
+        })
+
+    case_results.sort(
+        key=lambda item: item["score"],
+        reverse=True
+    )
+
+    # --------------------------------------------------------
+    # Build graph
+    # --------------------------------------------------------
+
+    graph = build_evidence_graph(
+        evidence,
+        diagnosis
+    )
+
+    # --------------------------------------------------------
+    # Confidence
+    # --------------------------------------------------------
+
+    competing_scores = [
+        item["score"]
+        for item in case_results
+    ]
+
+    confidence = calculate_phase7_confidence(
+        selected_score,
+        competing_scores,
+        graph
+    )
+
+    # --------------------------------------------------------
+    # Selected diagnosis
+    # --------------------------------------------------------
+
+    selected_id = diagnosis.get(
+        "case_id",
+        "UNKNOWN"
+    )
+
+    selected_title = diagnosis.get(
+        "title",
+        "Unknown Case"
+    )
+
+    print()
+    print("NetSage AI Decision Intelligence")
+    print("-" * 50)
+
+    print(
+        f"Selected Case: "
+        f"{selected_id} - {selected_title}"
+    )
+
+    print(
+        f"Match Score: {selected_score}"
+    )
+
+    print(
+        f"Overall Confidence: "
+        f"{confidence['overall']}% "
+        f"({confidence['level']})"
+    )
+
+    # --------------------------------------------------------
+    # Why selected
+    # --------------------------------------------------------
+
+    print()
+    print("Why this case was selected:")
+
+    for item in diagnosis.get(
+        "matching_evidence",
+        []
+    ):
+
+        print(f"- {item}")
+
+    if not diagnosis.get("matching_evidence"):
+
+        for item in graph[
+            "supporting_evidence"
+        ]:
+
+            print(f"- {item}")
+
+    # --------------------------------------------------------
+    # Evidence Graph
+    # --------------------------------------------------------
+
+    print()
+    print("Evidence Graph:")
+
+    print(
+        f"- Nodes: {len(graph['nodes'])}"
+    )
+
+    print(
+        f"- Relationships: "
+        f"{len(graph['relationships'])}"
+    )
+
+    print(
+        f"- Supporting evidence: "
+        f"{len(graph['supporting_evidence'])}"
+    )
+
+    print(
+        f"- Contradictions: "
+        f"{len(graph['contradictions'])}"
+    )
+
+    # --------------------------------------------------------
+    # Confidence breakdown
+    # --------------------------------------------------------
+
+    print()
+    print("Confidence Breakdown:")
+
+    print(
+        f"- Match Strength: "
+        f"{confidence['match_strength']}%"
+    )
+
+    print(
+        f"- Evidence Strength: "
+        f"{confidence['evidence_strength']}%"
+    )
+
+    print(
+        f"- Diagnostic Separation: "
+        f"{confidence['diagnostic_separation']}%"
+    )
+
+    print(
+        f"- Supporting Evidence: "
+        f"{confidence['supporting_evidence']}"
+    )
+
+    print(
+        f"- Exclusion Evidence: "
+        f"{confidence['exclusion_evidence']}"
+    )
+
+    print(
+        f"- Contradicting Evidence: "
+        f"{confidence['contradicting_evidence']}"
+    )
+
+    # --------------------------------------------------------
+    # Competing diagnoses
+    # --------------------------------------------------------
+
+    print()
+    print("Competing Diagnoses:")
+
+    for index, item in enumerate(
+        case_results[:5],
+        start=1
+    ):
+
+        case = item["case"]
+
+        case_id = case.get(
+            "case_id",
+            case.get("id", "UNKNOWN")
+        )
+
+        title = case.get(
+            "title",
+            case.get("name", "Unknown Case")
+        )
+
+        # Approximate competitor confidence
+        competitor_score = item["score"]
+
+        if selected_score > 0:
+
+            competitor_confidence = round(
+                min(
+                    99,
+                    (
+                        competitor_score /
+                        selected_score
+                    ) * confidence["overall"]
+                )
+            )
+
+        else:
+
+            competitor_confidence = 0
+
+        print(
+            f"{index}. "
+            f"{case_id} - {title} "
+            f"(score={competitor_score}, "
+            f"confidence={competitor_confidence}%)"
+        )
+
+    print()
+    print("-" * 60)
+
+    # --------------------------------------------------------
+    # Decision status
+    # --------------------------------------------------------
+
+    if confidence["overall"] >= 80:
+
+        decision_status = (
+            "HIGH-CONFIDENCE DIAGNOSIS"
+        )
+
+    elif confidence["overall"] >= 60:
+
+        decision_status = (
+            "MODERATE-CONFIDENCE DIAGNOSIS"
+        )
+
+    else:
+
+        decision_status = (
+            "LOW-CONFIDENCE DIAGNOSIS"
+        )
+
+    print(
+        f"Decision Status: {decision_status}"
+    )
+
+    print(
+        "Human approval remains required."
+    )
+
+    return {
+        "phase": 7,
+        "selected_case": selected_id,
+        "selected_title": selected_title,
+        "match_score": selected_score,
+        "confidence": confidence,
+        "evidence_graph": graph,
+        "competing_diagnoses": case_results,
+        "decision_status": decision_status,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+# ============================================================
+# PHASE 6 AUDIT
+# ============================================================
+
+def run_audit(
+    evidence,
+    diagnosis,
+    review_result,
+    verification_result,
+    phase7_result
+):
+
+    print()
+    print("=" * 60)
+    print("              PHASE 6 AUDIT")
+    print("=" * 60)
+
+    audit_directory = os.path.join(
+        BASE_DIR,
+        "data"
+    )
+
+    os.makedirs(
+        audit_directory,
+        exist_ok=True
+    )
+
+    audit_file = os.path.join(
+        audit_directory,
+        "responsible_ai_log.json"
+    )
+
+    record = {
+        "timestamp": datetime.now().isoformat(),
+        "phase": 7,
+        "case_id": diagnosis.get(
+            "case_id",
+            "UNKNOWN"
+        ),
+        "diagnosis": diagnosis.get(
+            "title",
+            "Unknown"
+        ),
+        "match_score": diagnosis.get(
+            "match_score",
+            0
+        ),
+        "human_review": review_result,
+        "verification": verification_result,
+        "phase7": {
+            "confidence": phase7_result.get(
+                "confidence",
+                {}
+            ),
+            "decision_status": phase7_result.get(
+                "decision_status",
+                "UNKNOWN"
+            )
+        },
+        "automatic_configuration_applied": False
+    }
+
+    records = []
+
+    if os.path.exists(audit_file):
+
+        try:
+
+            with open(
+                audit_file,
+                "r",
+                encoding="utf-8"
+            ) as file:
+
+                existing = json.load(file)
+
+                if isinstance(existing, list):
+                    records = existing
+
+        except Exception:
+
+            records = []
+
+    records.append(record)
+
+    with open(
+        audit_file,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            records,
+            file,
+            indent=4
+        )
+
+    print()
+    print("Audit record saved successfully.")
+
+    print()
+    print("Audit file:")
+    print(audit_file)
+
+    return record
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main():
+
+    print("=" * 60)
+    print("                    NetSage AI")
+    print("              Network Troubleshooting")
+    print("              Phase 7 Pipeline")
+    print("=" * 60)
+
+    print()
+    print("Paste Packet Tracer output.")
+    print("Type END on a new line when finished.")
+    print()
+
+    lines = []
+
+    while True:
+
+        try:
+
+            line = input()
+
+        except EOFError:
+
+            break
+
+        if line.strip().upper() == "END":
+
+            break
+
+        lines.append(line)
+
+    raw_output = "\n".join(lines)
+
+    if not raw_output.strip():
+
+        print()
+        print("No input provided.")
+        return
+
+    # ========================================================
+    # PHASE 3 - PARSER
+    # ========================================================
+
+    print()
+    print("Parsing Packet Tracer output...")
+
+    try:
+
+        evidence = parse_output(
+            raw_output
+        )
+
+    except Exception as error:
+
+        print()
+        print("Parser error:")
+        print(error)
+        return
+
+    # --------------------------------------------------------
+    # Evidence display
+    # --------------------------------------------------------
+
+    print()
+    print("=" * 60)
+    print("          STRUCTURED NETWORK EVIDENCE")
+    print("=" * 60)
+
+    print()
+    print("PING RESULTS")
+    print("-" * 60)
+
+    if evidence.get("pings"):
+
+        for ping in evidence["pings"]:
+
+            print(
+                f"Destination: "
+                f"{ping['destination']} | "
+                f"Status: "
+                f"{ping['status']} | "
+                f"Loss: "
+                f"{ping['loss_percentage']}%"
+            )
+
+    else:
+
+        print("No ping information detected.")
+
+    print()
+    print("INTERFACE RESULTS")
+    print("-" * 60)
+
+    if evidence.get("interfaces"):
+
+        for interface in evidence["interfaces"]:
+
+            print(
+                f"{interface['interface']} | "
+                f"IP: {interface['ip_address']} | "
+                f"Status: {interface['status']} | "
+                f"Protocol: {interface['protocol']}"
+            )
+
+    else:
+
+        print("No interface information detected.")
+
+    print()
+    print("VLAN RESULTS")
+    print("-" * 60)
+
+    if evidence.get("vlans"):
+
+        for vlan in evidence["vlans"]:
+
+            print(
+                f"VLAN {vlan['vlan_id']} | "
+                f"{vlan['name']} | "
+                f"{vlan['status']} | "
+                f"Ports: {vlan['ports']}"
+            )
+
+    else:
+
+        print("No VLAN information detected.")
+
+    print()
+    print("TRUNK RESULTS")
+    print("-" * 60)
+
+    trunk = evidence.get(
+        "trunk",
+        {}
+    )
+
+    if trunk.get("is_trunk"):
+
+        print("Trunk detected: YES")
+
+        if trunk.get("ports"):
+
+            print(
+                "Trunk ports:",
+                ", ".join(
+                    trunk["ports"]
+                )
+            )
+
+        if trunk.get("allowed_vlans"):
+
+            print(
+                "Allowed VLANs:",
+                trunk["allowed_vlans"]
+            )
+
+        if trunk.get("active_vlans"):
+
+            print(
+                "Active VLANs:",
+                trunk["active_vlans"]
+            )
+
+    else:
+
+        print(
+            "Trunk information not detected."
+        )
+
+    print()
+    print("FAULT INDICATORS")
+    print("-" * 60)
+
+    if evidence.get(
+        "fault_indicators"
+    ):
+
+        for indicator in evidence[
+            "fault_indicators"
+        ]:
+
+            print("-", indicator)
+
+    else:
+
+        print(
+            "No obvious fault indicators detected."
+        )
+
+    # ========================================================
+    # PHASE 4 - DIAGNOSIS
+    # ========================================================
+
+    print()
+    print("=" * 60)
+    print("              PHASE 4 DIAGNOSIS")
+    print("=" * 60)
+
+    try:
+
+        cases = load_cases()
+
+        best_case, best_score, best_evidence = (
+            find_best_case(
+                evidence,
+                cases
+            )
+        )
+
+    except Exception as error:
+
+        print()
+        print("Diagnosis engine error:")
+        print(error)
+        return
+
+    if not best_case:
+
+        print()
+        print("No matching network problem found.")
+        return
+
+    if isinstance(
+        best_case,
+        dict
+    ):
+
+        diagnosis = best_case.copy()
+
+    else:
+
+        diagnosis = {
+            "case": best_case
+        }
+
+    diagnosis["match_score"] = best_score
+    diagnosis[
+        "matching_evidence"
+    ] = best_evidence
+
+    case_id = diagnosis.get(
+        "case_id",
+        diagnosis.get(
+            "id",
+            "UNKNOWN"
+        )
+    )
+
+    title = diagnosis.get(
+        "title",
+        diagnosis.get(
+            "name",
+            "Unknown Case"
+        )
+    )
+
+    print()
+    print(
+        f"Most Likely Case: "
+        f"{case_id} - {title}"
+    )
+
+    print()
+    print(
+        f"Match Score: "
+        f"{best_score}"
+    )
+
+    if diagnosis.get(
+        "problem"
+    ):
+
+        print()
+        print("Problem:")
+        print(
+            diagnosis["problem"]
+        )
+
+    if diagnosis.get(
+        "root_cause"
+    ):
+
+        print()
+        print("Likely Root Cause:")
+        print(
+            diagnosis["root_cause"]
+        )
+
+    if best_evidence:
+
+        print()
+        print("Matching Evidence:")
+
+        for item in best_evidence:
+
+            print(
+                "-",
+                item
+            )
+
+    if diagnosis.get(
+        "recommended_fix"
+    ):
+
+        print()
+        print("Recommended Fix:")
+
+        fix = diagnosis[
+            "recommended_fix"
+        ]
+
+        if isinstance(
+            fix,
+            list
+        ):
+
+            for command in fix:
+
+                print(
+                    " ",
+                    command
+                )
+
+        else:
+
+            print(
+                " ",
+                fix
+            )
+
+    if diagnosis.get(
+        "verification"
+    ):
+
+        print()
+        print("Verification:")
+
+        verification = diagnosis[
+            "verification"
+        ]
+
+        if isinstance(
+            verification,
+            list
+        ):
+
+            for command in verification:
+
+                print(
+                    " ",
+                    command
+                )
+
+        else:
+
+            print(
+                " ",
+                verification
+            )
+
+    # ========================================================
+    # PHASE 7 - DECISION INTELLIGENCE
+    # ========================================================
+
+    phase7_result = run_phase7_decision(
+        evidence,
+        diagnosis,
+        cases,
+        best_score
+    )
+
+    # ========================================================
+    # HUMAN REVIEW
+    # ========================================================
+
+    print()
+    print("=" * 60)
+    print("              HUMAN REVIEW")
+    print("=" * 60)
+
+    print()
+    print("AI Recommendation")
+    print("-" * 60)
+
+    print()
+    print(
+        f"Most Likely Case:\n"
+        f"{case_id} - {title}"
+    )
+
+    print()
+    print(
+        f"Decision Confidence: "
+        f"{phase7_result['confidence']['overall']}%"
+    )
+
+    print()
+    print(
+        "Human approval is required before "
+        "configuration can be applied."
+    )
+
+    try:
+
+        review_result = human_review(
+            diagnosis
+        )
+
+    except TypeError:
+
+        review_result = human_review()
+
+    except Exception as error:
+
+        print()
+        print("Human review error:")
+        print(error)
+        return
+
+    print()
+    print("Review Result:")
+    print(review_result)
+
+    approved = False
+
+    if isinstance(
+        review_result,
+        dict
+    ):
+
+        approved = (
+            review_result.get(
+                "approved"
+            ) is True
+        )
+
+    if not approved:
+
+        print()
+        print("=" * 60)
+        print("          VERIFICATION NOT RUN")
+        print("=" * 60)
+
+        print()
+        print(
+            "Recommendation was not approved."
+        )
+
+        # Still audit the rejected decision
+        run_audit(
+            evidence,
+            diagnosis,
+            review_result,
+            None,
+            phase7_result
+        )
+
+        print()
+        print("=" * 60)
+        print("              PHASE 7 COMPLETE")
+        print("=" * 60)
+
+        return
+
+    # ========================================================
+    # PHASE 5 - VERIFICATION
+    # ========================================================
+
+    print()
+    print("=" * 60)
+    print("              PHASE 5 VERIFICATION")
+    print("=" * 60)
+
+    print()
+    print(
+        "Human approval confirmed."
+    )
+
+    print(
+        "Starting recommendation verification..."
+    )
+
+    try:
+
+        verification_result = (
+            verify_recommendation(
+                evidence,
+                case_id
+            )
+        )
+
+    except Exception as error:
+
+        print()
+        print(
+            "Verification engine error:"
+        )
+
+        print(error)
+
+        return
+
+    print()
+    print("=" * 60)
+    print("              VERIFICATION RESULT")
+    print("=" * 60)
+
+    if isinstance(
+        verification_result,
+        dict
+    ):
+
+        for key, value in (
+            verification_result.items()
+        ):
+
+            formatted_key = (
+                key.replace(
+                    "_",
+                    " "
+                ).title()
+            )
+
+            print(
+                f"{formatted_key}: "
+                f"{value}"
+            )
+
+    else:
+
+        print(
+            verification_result
+        )
+
+    # ========================================================
+    # PHASE 6 - AUDIT
+    # ========================================================
+
+    audit_result = run_audit(
+        evidence,
+        diagnosis,
+        review_result,
+        verification_result,
+        phase7_result
+    )
+
+    # ========================================================
+    # FINAL SAFETY MESSAGE
+    # ========================================================
+
+    print()
+    print("=" * 60)
+    print("                SAFETY")
+    print("=" * 60)
+
+    print()
+    print(
+        "NetSage AI does NOT automatically "
+        "modify network configuration."
+    )
+
+    print(
+        "Automatic configuration applied: FALSE"
+    )
+
+    # ========================================================
+    # PHASE 7 COMPLETE
+    # ========================================================
+
+    print()
+    print("=" * 60)
+    print("             PHASE 7 COMPLETE")
+    print("=" * 60)
+
+    print()
+    print(
+        "Decision Intelligence integrated successfully."
+    )
+
+    print(
+        f"Final Decision: {phase7_result['decision_status']}"
+    )
+
+    print(
+        f"Overall Confidence: "
+        f"{phase7_result['confidence']['overall']}%"
+    )
+
+    print(
+        f"Selected Case: "
+        f"{phase7_result['selected_case']}"
+    )
+
+    print()
+    print(
+        "Pipeline status:"
+    )
+
+    print(
+        "Parser              [OK]"
+    )
+
+    print(
+        "Diagnosis Engine    [OK]"
+    )
+
+    print(
+        "Evidence Graph      [OK]"
+    )
+
+    print(
+        "Confidence Engine   [OK]"
+    )
+
+    print(
+        "Decision Engine     [OK]"
+    )
+
+    print(
+        "Human Review        [OK]"
+    )
+
+    print(
+        "Verification        [OK]"
+    )
+
+    print(
+        "Audit Logging       [OK]"
+    )
+
+    print()
+    print("=" * 60)
+
+
+# ============================================================
+# PROGRAM ENTRY
+# ============================================================
+
+if __name__ == "__main__":
+    main()

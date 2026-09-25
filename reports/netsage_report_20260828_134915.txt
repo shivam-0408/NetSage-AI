@@ -1,0 +1,62 @@
+======================================================================
+                    NetSage AI
+             PHASE 8 INCIDENT REPORT
+======================================================================
+
+INCIDENT
+----------------------------------------------------------------------
+Case ID: UNKNOWN
+Diagnosis: Unknown Case
+Problem: Unknown
+Root Cause: Unknown
+
+DECISION
+----------------------------------------------------------------------
+Status: LOW-CONFIDENCE DIAGNOSIS
+Confidence: 0.0%
+Confidence Level: LOW
+Match Score: 0
+
+WHY THIS DIAGNOSIS WAS SELECTED
+----------------------------------------------------------------------
+- No detailed selection evidence recorded.
+
+REASONING
+----------------------------------------------------------------------
+NetSage AI selected 'Unknown Case' because the available network evidence most strongly supports the identified root cause: Unknown. The resulting decision confidence is 0.0% (LOW).
+
+SUPPORTING EVIDENCE
+----------------------------------------------------------------------
+- None recorded.
+
+CONTRADICTIONS
+----------------------------------------------------------------------
+- None detected.
+
+COMPETING DIAGNOSES
+----------------------------------------------------------------------
+- None recorded.
+
+RECOMMENDED FIX
+----------------------------------------------------------------------
+
+HUMAN REVIEW
+----------------------------------------------------------------------
+{'remediation': {'phase': 'Phase 12', 'generated_at': '2026-08-28T13:49:15.994738', 'status': 'READY_FOR_HUMAN_REVIEW', 'incident': {'case_id': 'UNKNOWN', 'title': 'Unknown Case'}, 'diagnosis': {'confidence': 0.0}, 'confidence': 0.0, 'confidence_level': 'LOW', 'risk': {'score': 100, 'level': 'CRITICAL'}, 'remediation': {'action': 'Review Recommended Fix', 'risk_level': 'MODERATE', 'commands': [], 'verification': ['Repeat relevant diagnostic checks', 'Confirm service connectivity']}, 'safety': {'allowed': True, 'status': 'READY_FOR_HUMAN_REVIEW', 'human_approval_required': True, 'human_approval_received': False, 'automatic_execution': False, 'automatic_configuration_applied': False, 'reasons': ['Network risk is critical; human review is mandatory.', 'Diagnostic confidence does not meet the threshold for independent action.', 'Human approval has not been provided.'], 'warnings': ['Automatic network configuration execution is disabled by policy.', 'Proposed commands are recommendations for human review only.']}}, 'safety': {'allowed': True, 'status': 'READY_FOR_HUMAN_REVIEW', 'confidence': 0.0, 'risk_score': 100.0, 'human_approval_required': True, 'automatic_execution': False, 'automatic_configuration_applied': False, 'reasons': ['Human approval is required before any configuration change.']}}
+
+VERIFICATION
+----------------------------------------------------------------------
+{'phase': 'Phase 11', 'generated_at': '2026-08-28T13:49:15.993984', 'health_score': 0, 'health_level': 'CRITICAL', 'risk_score': 100, 'risk_level': 'CRITICAL', 'priority': 'P1 - IMMEDIATE', 'finding_count': 6, 'severity_summary': {'critical': 1, 'high': 5, 'moderate': 0}, 'findings': [{'type': 'PING_FAILURE', 'severity': 'HIGH', 'message': 'Destination 192.168.30.10 has 100% packet loss.'}, {'type': 'ADMINISTRATIVELY_DOWN', 'severity': 'CRITICAL', 'message': 'GigabitEthernet0/0.30 is administratively down.'}, {'type': 'PROTOCOL_DOWN', 'severity': 'HIGH', 'message': 'GigabitEthernet0/0.30 protocol is down.'}, {'type': 'FAULT_INDICATOR', 'severity': 'HIGH', 'message': 'Interface administratively down'}, {'type': 'FAULT_INDICATOR', 'severity': 'HIGH', 'message': '100% packet loss'}, {'type': 'FAULT_INDICATOR', 'severity': 'HIGH', 'message': 'Destination host unreachable'}], 'priority_actions': ['Investigate the path to the unreachable destination.', 'Review the affected interface and determine whether it should be enabled.', 'Investigate interface protocol state and Layer 2/Layer 3 connectivity.', 'Review the reported fault indicator against the complete network evidence.'], 'safety': {'allowed': True, 'status': 'READY_FOR_HUMAN_REVIEW', 'confidence': 0.0, 'risk_score': 100.0, 'human_approval_required': True, 'automatic_execution': False, 'automatic_configuration_applied': False, 'reasons': ['Human approval is required before any configuration change.']}}
+
+SAFETY
+----------------------------------------------------------------------
+Automatic configuration applied: FALSE
+Human approval required: TRUE
+
+AUDIT
+----------------------------------------------------------------------
+Audit file: None
+
+======================================================================
+              PHASE 8 COMPLETE
+======================================================================

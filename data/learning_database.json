@@ -1,0 +1,35 @@
+{
+    "version": "1.0",
+    "incidents": [
+        {
+            "incident_id": "audit_1",
+            "case_id": "case_01",
+            "verified": true,
+            "verification_score": 100,
+            "approved": true,
+            "supporting_evidence": [],
+            "learned_at": "2026-08-28T13:12:16.644780"
+        },
+        {
+            "incident_id": "audit_2",
+            "case_id": "case_01",
+            "verified": true,
+            "verification_score": 100,
+            "approved": true,
+            "supporting_evidence": [],
+            "learned_at": "2026-08-28T13:12:16.644822"
+        }
+    ],
+    "case_statistics": {
+        "case_01": {
+            "case_id": "case_01",
+            "total_verified": 2,
+            "successful": 2,
+            "failed": 0,
+            "approval_count": 2,
+            "success_rate": 100.0
+        }
+    },
+    "patterns": [],
+    "last_updated": "2026-08-28T13:12:16.644874"
+}

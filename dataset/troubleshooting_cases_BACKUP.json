@@ -1,0 +1,149 @@
+{
+  "project": "NetSage AI",
+  "version": "1.0",
+  "cases": [
+    {
+      "case_id": "case_01",
+      "title": "Inter-VLAN Routing - Router Subinterface Down",
+      "problem": "PC0 cannot communicate with the server in VLAN 30.",
+      "symptoms": [
+        "PC0 can successfully ping its gateway 192.168.10.1.",
+        "PC0 cannot ping the server at 192.168.30.10.",
+        "Ping to 192.168.30.10 results in 100% packet loss.",
+        "Router reports the VLAN 30 subinterface as administratively down."
+      ],
+      "ping_output": {
+        "gateway": {
+          "destination": "192.168.10.1",
+          "sent": 4,
+          "received": 4,
+          "lost": 0,
+          "result": "Success"
+        },
+        "server": {
+          "destination": "192.168.30.10",
+          "sent": 4,
+          "received": 0,
+          "lost": 4,
+          "result": "Destination host unreachable"
+        }
+      },
+      "show_commands": {
+        "show_ip_interface_brief": "GigabitEthernet0/0.10 192.168.10.1 up up; GigabitEthernet0/0.30 192.168.30.1 administratively down down",
+        "show_vlan_brief": "VLAN 10 USERS: Fa0/1; VLAN 30 SERVERS: Fa0/2",
+        "show_interfaces_trunk": "Gig0/1 is trunking with 802.1q; VLANs 1,10,30 are allowed and active"
+      },
+      "root_cause": "GigabitEthernet0/0.30, the router subinterface for VLAN 30, is administratively shut down.",
+      "evidence": [
+        "GigabitEthernet0/0.30 has IP address 192.168.30.1.",
+        "GigabitEthernet0/0.30 is administratively down/down.",
+        "Switch Fa0/2 is correctly assigned to VLAN 30.",
+        "Switch Gig0/1 is correctly trunking VLAN 30.",
+        "PC0 can reach VLAN 10 gateway but cannot reach the VLAN 30 server."
+      ],
+      "recommended_fix": [
+        "enable",
+        "configure terminal",
+        "interface GigabitEthernet0/0.30",
+        "no shutdown",
+        "end"
+      ],
+      "verification": [
+        "show ip interface brief",
+        "ping 192.168.30.10"
+      ],
+      "expected_result": "GigabitEthernet0/0.30 should show up/up and PC0 should successfully ping 192.168.30.10.",
+      "human_review_required": true
+    },
+    {
+      "case_id": "case_02",
+      "title": "Wrong VLAN Assignment",
+      "problem": "PC0 cannot communicate correctly because its switch port is assigned to the wrong VLAN.",
+      "symptoms": [
+        "PC0 is connected to FastEthernet0/1.",
+        "PC0 should belong to VLAN 10 USERS.",
+        "FastEthernet0/1 was incorrectly assigned to VLAN 30 SERVERS.",
+        "PC0 cannot communicate correctly with the intended VLAN 10 network."
+      ],
+      "show_commands": {
+        "show_vlan_brief": "VLAN 10 USERS: Fa0/1; VLAN 30 SERVERS: Fa0/2",
+        "expected_configuration": "Fa0/1 should be assigned to VLAN 10.",
+        "fault": "Fa0/1 was incorrectly assigned to VLAN 30."
+      },
+      "root_cause": "FastEthernet0/1 was configured as an access port in VLAN 30 instead of VLAN 10.",
+      "evidence": [
+        "PC0 is connected to Fa0/1.",
+        "Fa0/1 was found in VLAN 30 in the faulty configuration.",
+        "PC0 is intended to be part of VLAN 10 USERS.",
+        "Fa0/2 correctly belongs to VLAN 30 SERVERS."
+      ],
+      "recommended_fix": [
+        "enable",
+        "configure terminal",
+        "interface fastEthernet 0/1",
+        "switchport access vlan 10",
+        "end"
+      ],
+      "verification": [
+        "show vlan brief",
+        "ping 192.168.10.1",
+        "ping 192.168.30.10"
+      ],
+      "expected_result": "Fa0/1 should appear under VLAN 10 USERS and PC0 should regain the expected network connectivity.",
+      "human_review_required": true
+    },
+    {
+      "case_id": "case_03",
+      "title": "Wrong Default Gateway",
+      "problem": "PC0 cannot communicate with devices outside its local subnet because its default gateway is incorrectly configured.",
+      "symptoms": [
+        "PC0 can communicate with the local gateway interface 192.168.10.1.",
+        "PC0 cannot reach the server at 192.168.30.10.",
+        "PC0 is configured with an incorrect default gateway.",
+        "The configured gateway is 192.168.10.254 instead of 192.168.10.1."
+      ],
+      "pc_configuration": {
+        "ip_address": "192.168.10.10",
+        "subnet_mask": "255.255.255.0",
+        "configured_default_gateway": "192.168.10.254",
+        "expected_default_gateway": "192.168.10.1"
+      },
+      "ping_output": {
+        "gateway": {
+          "destination": "192.168.10.1",
+          "result": "Success"
+        },
+        "server": {
+          "destination": "192.168.30.10",
+          "result": "Failed"
+        }
+      },
+      "show_commands": {
+        "show_ip_interface_brief": "GigabitEthernet0/0.10 192.168.10.1 up up; GigabitEthernet0/0.30 192.168.30.1 up up",
+        "show_vlan_brief": "VLAN 10 USERS: Fa0/1; VLAN 30 SERVERS: Fa0/2",
+        "show_interfaces_trunk": "Gig0/1 is trunking with 802.1q; VLANs 1,10,30 are allowed and active"
+      },
+      "root_cause": "PC0 has an incorrect default gateway configured as 192.168.10.254.",
+      "evidence": [
+        "PC0 IP address is 192.168.10.10.",
+        "PC0 belongs to subnet 192.168.10.0/24.",
+        "The router gateway for VLAN 10 is 192.168.10.1.",
+        "PC0 is configured to use 192.168.10.254 as its default gateway.",
+        "The router subinterfaces are operational.",
+        "The switch VLAN and trunk configuration is operational."
+      ],
+      "recommended_fix": [
+        "Open PC0.",
+        "Go to Desktop.",
+        "Open IP Configuration.",
+        "Change Default Gateway from 192.168.10.254 to 192.168.10.1."
+      ],
+      "verification": [
+        "ping 192.168.10.1",
+        "ping 192.168.30.10"
+      ],
+      "expected_result": "PC0 should use 192.168.10.1 as its default gateway and successfully communicate with 192.168.30.10.",
+      "human_review_required": true
+    }
+  ]
+}

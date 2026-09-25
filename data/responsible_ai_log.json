@@ -1,0 +1,361 @@
+[
+    {
+        "timestamp": "2026-08-28T01:51:53.885972",
+        "case_id": "case_01",
+        "title": "Inter-VLAN Routing - Router Subinterface Down",
+        "diagnosis": {
+            "score": 23,
+            "root_cause": "GigabitEthernet0/0.30, the router subinterface for VLAN 30, is administratively shut down.",
+            "evidence": [
+                "PC0 cannot ping the server at 192.168.30.10.",
+                "Ping to 192.168.30.10 results in 100% packet loss.",
+                "Router reports the VLAN 30 subinterface as administratively down.",
+                "Matched show_ip_interface_brief",
+                "Matched show_vlan_brief",
+                "Matched show_interfaces_trunk"
+            ]
+        },
+        "recommendation": {
+            "commands": [
+                "enable",
+                "configure terminal",
+                "interface GigabitEthernet0/0.30",
+                "no shutdown",
+                "end"
+            ]
+        },
+        "human_review": {
+            "reviewed": true,
+            "approved": true
+        },
+        "verification": {
+            "score": 100,
+            "verified": true,
+            "checks": [
+                [
+                    "Router subinterface",
+                    {
+                        "passed": true,
+                        "message": "GigabitEthernet0/0.30 is administratively down, which supports the recommended no shutdown command."
+                    }
+                ],
+                [
+                    "VLAN 30",
+                    {
+                        "passed": true,
+                        "message": "VLAN 30 exists and is active."
+                    }
+                ],
+                [
+                    "Trunk",
+                    {
+                        "passed": true,
+                        "message": "Trunk is active and VLAN 30 appears to be permitted/active."
+                    }
+                ],
+                [
+                    "Destination reachability",
+                    {
+                        "passed": true,
+                        "message": "192.168.30.10 is unreachable, which is consistent with the reported fault."
+                    }
+                ]
+            ]
+        },
+        "safety": {
+            "automatic_configuration_applied": false
+        }
+    },
+    {
+        "timestamp": "2026-08-28T02:03:51.778954",
+        "phase": 7,
+        "case_id": "case_01",
+        "diagnosis": "Inter-VLAN Routing - Router Subinterface Down",
+        "match_score": 23,
+        "human_review": {
+            "reviewed": true,
+            "approved": true,
+            "decision": "APPROVED"
+        },
+        "verification": {
+            "case": "case_01",
+            "checks": [
+                [
+                    "Router subinterface",
+                    {
+                        "passed": true,
+                        "message": "GigabitEthernet0/0.30 is administratively down, which supports the recommended no shutdown command."
+                    }
+                ],
+                [
+                    "VLAN 30",
+                    {
+                        "passed": true,
+                        "message": "VLAN 30 exists and is active."
+                    }
+                ],
+                [
+                    "Trunk",
+                    {
+                        "passed": true,
+                        "message": "Trunk is active and VLAN 30 appears to be permitted/active."
+                    }
+                ],
+                [
+                    "Destination reachability",
+                    {
+                        "passed": true,
+                        "message": "192.168.30.10 is unreachable, which is consistent with the reported fault."
+                    }
+                ]
+            ],
+            "passed_checks": 4,
+            "total_checks": 4,
+            "verification_score": 100,
+            "verified": true
+        },
+        "phase7": {
+            "confidence": {
+                "overall": 82,
+                "level": "HIGH",
+                "match_strength": 92,
+                "evidence_strength": 100,
+                "diagnostic_separation": 26,
+                "supporting_evidence": 6,
+                "exclusion_evidence": 5,
+                "contradicting_evidence": 0,
+                "contradiction_penalty": 0
+            },
+            "decision_status": "HIGH-CONFIDENCE DIAGNOSIS"
+        },
+        "automatic_configuration_applied": false
+    },
+    {
+        "timestamp": "2026-08-28T22:15:06.633298",
+        "case_id": "TEST-01",
+        "title": "Phase 6 Test",
+        "diagnosis": {
+            "score": 95,
+            "root_cause": "Test root cause",
+            "evidence": [
+                "Test evidence"
+            ]
+        },
+        "recommendation": {
+            "commands": [
+                "Test command"
+            ]
+        },
+        "human_review": {
+            "reviewed": true,
+            "approved": true
+        },
+        "verification": {
+            "score": 100,
+            "verified": true,
+            "checks": [
+                "Test verification"
+            ]
+        },
+        "safety": {
+            "automatic_configuration_applied": false
+        }
+    },
+    {
+        "timestamp": "2026-08-28T22:26:39.427925",
+        "case_id": "TEST-INTEGRATION",
+        "title": "Phase 6 Integration Test",
+        "diagnosis": {
+            "score": 90,
+            "root_cause": "Test root cause",
+            "evidence": [
+                "Test evidence"
+            ]
+        },
+        "recommendation": {
+            "commands": [
+                "Test command"
+            ]
+        },
+        "human_review": {
+            "reviewed": true,
+            "approved": true
+        },
+        "verification": {
+            "score": 100,
+            "verified": true,
+            "checks": [
+                "Test check"
+            ]
+        },
+        "safety": {
+            "automatic_configuration_applied": false,
+            "human_approval_required": true
+        },
+        "phase": 6,
+        "phase7_decision": {
+            "confidence": {
+                "overall": 90,
+                "level": "HIGH"
+            },
+            "decision_status": "HIGH-CONFIDENCE DIAGNOSIS",
+            "selected_case": "TEST-INTEGRATION"
+        }
+    },
+    {
+        "timestamp": "2026-08-28T23:23:39.502308",
+        "case_id": "case_01",
+        "title": "Inter-VLAN Routing - Router Subinterface Down",
+        "diagnosis": {
+            "score": 9,
+            "root_cause": "GigabitEthernet0/0.30, the router subinterface for VLAN 30, is administratively shut down.",
+            "evidence": [
+                "Matched show_ip_interface_brief",
+                "Matched show_vlan_brief"
+            ]
+        },
+        "recommendation": {
+            "commands": [
+                "enable",
+                "configure terminal",
+                "interface GigabitEthernet0/0.30",
+                "no shutdown",
+                "end"
+            ]
+        },
+        "human_review": {
+            "reviewed": true,
+            "approved": true
+        },
+        "verification": {
+            "score": 0,
+            "verified": false,
+            "checks": [
+                [
+                    "Router subinterface",
+                    {
+                        "passed": false,
+                        "message": "GigabitEthernet0/0.30 was not found in interface evidence."
+                    }
+                ],
+                [
+                    "VLAN 30",
+                    {
+                        "passed": false,
+                        "message": "VLAN 30 was not found."
+                    }
+                ],
+                [
+                    "Trunk",
+                    {
+                        "passed": false,
+                        "message": "No active trunk was detected."
+                    }
+                ]
+            ]
+        },
+        "safety": {
+            "automatic_configuration_applied": false,
+            "human_approval_required": true
+        },
+        "phase": 6,
+        "phase7_decision": {
+            "confidence": {
+                "overall": 64,
+                "level": "MODERATE",
+                "match_strength": 92,
+                "evidence_strength": 40,
+                "diagnostic_separation": 56,
+                "supporting_evidence": 0,
+                "exclusion_evidence": 2,
+                "contradicting_evidence": 0,
+                "contradiction_penalty": 0
+            },
+            "decision_status": "MODERATE-CONFIDENCE DIAGNOSIS",
+            "selected_case": "case_01"
+        }
+    },
+    {
+        "timestamp": "2026-08-29T01:29:46.968756",
+        "case_id": "case_01",
+        "title": "Inter-VLAN Routing - Router Subinterface Down",
+        "diagnosis": {
+            "score": 20,
+            "root_cause": "GigabitEthernet0/0.30, the router subinterface for VLAN 30, is administratively shut down.",
+            "evidence": [
+                "PC0 cannot ping the server at 192.168.30.10.",
+                "Ping to 192.168.30.10 results in 100% packet loss.",
+                "Matched show_ip_interface_brief",
+                "Matched show_vlan_brief",
+                "Matched show_interfaces_trunk"
+            ]
+        },
+        "recommendation": {
+            "commands": [
+                "enable",
+                "configure terminal",
+                "interface GigabitEthernet0/0.30",
+                "no shutdown",
+                "end"
+            ]
+        },
+        "human_review": {
+            "reviewed": true,
+            "approved": true
+        },
+        "verification": {
+            "score": 50,
+            "verified": false,
+            "checks": [
+                [
+                    "Router subinterface",
+                    {
+                        "passed": false,
+                        "message": "GigabitEthernet0/0.30 was not found in interface evidence."
+                    }
+                ],
+                [
+                    "VLAN 30",
+                    {
+                        "passed": true,
+                        "message": "VLAN 30 exists and is active."
+                    }
+                ],
+                [
+                    "Trunk",
+                    {
+                        "passed": true,
+                        "message": "Trunk is active and VLAN 30 appears to be permitted/active."
+                    }
+                ],
+                [
+                    "Destination reachability",
+                    {
+                        "passed": false,
+                        "message": "Destination is already reachable."
+                    }
+                ]
+            ]
+        },
+        "safety": {
+            "automatic_configuration_applied": false,
+            "human_approval_required": true
+        },
+        "phase": 6,
+        "phase7_decision": {
+            "confidence": {
+                "overall": 66,
+                "level": "MODERATE",
+                "match_strength": 92,
+                "evidence_strength": 70,
+                "diagnostic_separation": 6,
+                "supporting_evidence": 3,
+                "exclusion_evidence": 5,
+                "contradicting_evidence": 0,
+                "contradiction_penalty": 0
+            },
+            "decision_status": "MODERATE-CONFIDENCE DIAGNOSIS",
+            "selected_case": "case_01"
+        }
+    }
+]

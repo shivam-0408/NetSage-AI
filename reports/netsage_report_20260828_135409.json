@@ -1,0 +1,194 @@
+{
+    "phase": "Phase 13",
+    "incident_id": "incident_20260828_135409",
+    "generated_at": "2026-08-28T13:54:09.294491",
+    "diagnosis": {
+        "case_id": "UNKNOWN",
+        "title": "Unknown Case",
+        "score": 0.0,
+        "original_score": 0.0,
+        "adaptive_score": 0.0,
+        "historical_verified": 0,
+        "historical_success_rate": 0.0,
+        "historical_reliability": 0.0,
+        "adaptive_bonus": 0.0
+    },
+    "confidence": 0.0,
+    "confidence_level": "UNKNOWN",
+    "original_confidence": 0.0,
+    "decision": {
+        "selected_case": {
+            "case_id": "UNKNOWN",
+            "title": "Unknown Case"
+        },
+        "overall_confidence": 0,
+        "decision_status": "LOW-CONFIDENCE DIAGNOSIS",
+        "match_score": 0,
+        "matching_evidence": [],
+        "supporting_evidence": [],
+        "contradictions": [],
+        "competing_diagnoses": []
+    },
+    "adaptive": {
+        "phase": "Phase 10",
+        "timestamp": "2026-08-28T13:54:09.293958",
+        "status": "ADAPTIVE-DIAGNOSIS",
+        "adaptive": true,
+        "selected_case": {
+            "case_id": "UNKNOWN",
+            "title": "Unknown Case",
+            "original_score": 0.0,
+            "historical_success_rate": 0.0,
+            "historical_verified": 0,
+            "adaptive_bonus": 0,
+            "adaptive_score": 0.0,
+            "historical_reliability": 0.0
+        },
+        "overall_confidence": 0,
+        "confidence_level": "LOW",
+        "original_confidence": 0.0,
+        "learning": {
+            "historical_verified": 0,
+            "historical_success_rate": 0.0,
+            "historical_reliability": 0.0,
+            "adaptive_bonus": 0,
+            "reason": "No verified historical performance was available for this diagnosis."
+        },
+        "ranked_diagnoses": [
+            {
+                "case_id": "UNKNOWN",
+                "title": "Unknown Case",
+                "original_score": 0.0,
+                "historical_success_rate": 0.0,
+                "historical_verified": 0,
+                "adaptive_bonus": 0,
+                "adaptive_score": 0.0,
+                "historical_reliability": 0.0
+            }
+        ],
+        "safety": {
+            "automatic_configuration_applied": false,
+            "human_approval_required": true
+        }
+    },
+    "risk": {
+        "phase": "Phase 11",
+        "generated_at": "2026-08-28T13:54:09.294207",
+        "health_score": 0,
+        "health_level": "CRITICAL",
+        "risk_score": 100,
+        "risk_level": "CRITICAL",
+        "priority": "P1 - IMMEDIATE",
+        "finding_count": 6,
+        "severity_summary": {
+            "critical": 1,
+            "high": 5,
+            "moderate": 0
+        },
+        "findings": [
+            {
+                "type": "PING_FAILURE",
+                "severity": "HIGH",
+                "message": "Destination 192.168.30.10 has 100% packet loss."
+            },
+            {
+                "type": "ADMINISTRATIVELY_DOWN",
+                "severity": "CRITICAL",
+                "message": "GigabitEthernet0/0.30 is administratively down."
+            },
+            {
+                "type": "PROTOCOL_DOWN",
+                "severity": "HIGH",
+                "message": "GigabitEthernet0/0.30 protocol is down."
+            },
+            {
+                "type": "FAULT_INDICATOR",
+                "severity": "HIGH",
+                "message": "Interface administratively down"
+            },
+            {
+                "type": "FAULT_INDICATOR",
+                "severity": "HIGH",
+                "message": "100% packet loss"
+            },
+            {
+                "type": "FAULT_INDICATOR",
+                "severity": "HIGH",
+                "message": "Destination host unreachable"
+            }
+        ],
+        "priority_actions": [
+            "Investigate the path to the unreachable destination.",
+            "Review the affected interface and determine whether it should be enabled.",
+            "Investigate interface protocol state and Layer 2/Layer 3 connectivity.",
+            "Review the reported fault indicator against the complete network evidence."
+        ],
+        "safety": {
+            "automatic_configuration_applied": false,
+            "human_approval_required": true
+        }
+    },
+    "health_score": 0.0,
+    "health_level": "CRITICAL",
+    "risk_score": 100.0,
+    "risk_level": "CRITICAL",
+    "priority": "P1 - IMMEDIATE",
+    "remediation": {
+        "phase": "Phase 12",
+        "generated_at": "2026-08-28T13:54:09.294299",
+        "status": "READY_FOR_HUMAN_REVIEW",
+        "incident": {
+            "case_id": "UNKNOWN",
+            "title": "Unknown Case"
+        },
+        "diagnosis": {
+            "case_id": "UNKNOWN",
+            "title": "Unknown Case",
+            "score": 0.0,
+            "original_score": 0.0,
+            "adaptive_score": 0.0,
+            "historical_verified": 0,
+            "historical_success_rate": 0.0,
+            "historical_reliability": 0.0,
+            "adaptive_bonus": 0.0
+        },
+        "confidence": 0.0,
+        "confidence_level": "LOW",
+        "risk": {
+            "score": 0,
+            "level": "LOW"
+        },
+        "remediation": {
+            "action": "Review Recommended Fix",
+            "risk_level": "LOW",
+            "commands": [],
+            "verification": [
+                "Repeat relevant diagnostic checks",
+                "Confirm service connectivity"
+            ]
+        },
+        "safety": {
+            "allowed": true,
+            "status": "READY_FOR_HUMAN_REVIEW",
+            "human_approval_required": true,
+            "human_approval_received": false,
+            "automatic_execution": false,
+            "automatic_configuration_applied": false,
+            "reasons": [
+                "Diagnostic confidence does not meet the threshold for independent action.",
+                "Human approval has not been provided."
+            ],
+            "warnings": [
+                "Automatic network configuration execution is disabled by policy.",
+                "Proposed commands are recommendations for human review only."
+            ]
+        }
+    },
+    "safety": {
+        "allowed": true,
+        "human_approval_required": true,
+        "automatic_execution": false,
+        "automatic_configuration_applied": false
+    },
+    "human_approval": false
+}

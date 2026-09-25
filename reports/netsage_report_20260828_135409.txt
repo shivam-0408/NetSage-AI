@@ -1,0 +1,32 @@
+======================================================================
+NETSAGE AI INCIDENT REPORT
+======================================================================
+
+Incident ID: incident_20260828_135409
+Generated: 2026-08-28T13:54:09.294491
+
+SELECTED DIAGNOSIS
+----------------------------------------------------------------------
+Case ID: UNKNOWN
+Title: Unknown Case
+Confidence: 0.0%
+Confidence Level: UNKNOWN
+
+NETWORK RISK
+----------------------------------------------------------------------
+Health Score: 0.0/100
+Health Level: CRITICAL
+Risk Score: 100.0/100
+Risk Level: CRITICAL
+Priority: P1 - IMMEDIATE
+
+SAFETY
+----------------------------------------------------------------------
+Human Approval Required: True
+Automatic Execution: False
+Automatic Configuration Applied: False
+
+======================================================================
+NETSAGE AI DOES NOT EXECUTE NETWORK CONFIGURATION.
+All remediation commands are recommendations for human review.
+======================================================================

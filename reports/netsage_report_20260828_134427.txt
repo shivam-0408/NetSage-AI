@@ -1,0 +1,77 @@
+======================================================================
+                    NetSage AI
+             PHASE 8 INCIDENT REPORT
+======================================================================
+
+INCIDENT
+----------------------------------------------------------------------
+Case ID: case_01
+Diagnosis: Inter-VLAN Routing - Router Subinterface Down
+Problem: PC0 cannot communicate with the server in VLAN 30.
+Root Cause: GigabitEthernet0/0.30, the router subinterface for VLAN 30, is administratively shut down.
+
+DECISION
+----------------------------------------------------------------------
+Status: LOW-CONFIDENCE DIAGNOSIS
+Confidence: 0%
+Confidence Level: LOW
+Match Score: 23
+
+WHY THIS DIAGNOSIS WAS SELECTED
+----------------------------------------------------------------------
+- PC0 cannot ping the server at 192.168.30.10.
+- Ping to 192.168.30.10 results in 100% packet loss.
+- Router reports the VLAN 30 subinterface as administratively down.
+- Matched show_ip_interface_brief
+- Matched show_vlan_brief
+- Matched show_interfaces_trunk
+
+REASONING
+----------------------------------------------------------------------
+NetSage AI selected 'Inter-VLAN Routing - Router Subinterface Down' because the available network evidence most strongly supports the identified root cause: GigabitEthernet0/0.30, the router subinterface for VLAN 30, is administratively shut down.. The resulting decision confidence is 0% (LOW).
+
+SUPPORTING EVIDENCE
+----------------------------------------------------------------------
+- PC0 cannot ping the server at 192.168.30.10.
+- Ping to 192.168.30.10 results in 100% packet loss.
+- Router reports the VLAN 30 subinterface as administratively down.
+- Matched show_ip_interface_brief
+- Matched show_vlan_brief
+- Matched show_interfaces_trunk
+
+CONTRADICTIONS
+----------------------------------------------------------------------
+- None detected.
+
+COMPETING DIAGNOSES
+----------------------------------------------------------------------
+- None recorded.
+
+RECOMMENDED FIX
+----------------------------------------------------------------------
+  enable
+  configure terminal
+  interface GigabitEthernet0/0.30
+  no shutdown
+  end
+
+HUMAN REVIEW
+----------------------------------------------------------------------
+{'reviewed': False, 'approved': False, 'decision': 'PENDING_HUMAN_APPROVAL'}
+
+VERIFICATION
+----------------------------------------------------------------------
+{'status': 'PENDING', 'automatic_execution': False}
+
+SAFETY
+----------------------------------------------------------------------
+Automatic configuration applied: FALSE
+Human approval required: TRUE
+
+AUDIT
+----------------------------------------------------------------------
+Audit file: data/responsible_ai_log.json
+
+======================================================================
+              PHASE 8 COMPLETE
+======================================================================

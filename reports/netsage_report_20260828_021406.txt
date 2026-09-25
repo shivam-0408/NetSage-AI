@@ -1,0 +1,70 @@
+======================================================================
+                    NetSage AI
+             PHASE 8 INCIDENT REPORT
+======================================================================
+
+INCIDENT
+----------------------------------------------------------------------
+Case ID: case_01
+Diagnosis: Inter-VLAN Routing - Router Subinterface Down
+Problem: PC0 cannot communicate with VLAN 30 server.
+Root Cause: GigabitEthernet0/0.30 is administratively down.
+
+DECISION
+----------------------------------------------------------------------
+Status: HIGH-CONFIDENCE DIAGNOSIS
+Confidence: 82%
+Confidence Level: HIGH
+Match Score: 23
+
+WHY THIS DIAGNOSIS WAS SELECTED
+----------------------------------------------------------------------
+- VLAN 30 subinterface is administratively down.
+- Destination has 100% packet loss.
+
+REASONING
+----------------------------------------------------------------------
+NetSage AI selected 'Inter-VLAN Routing - Router Subinterface Down' because the available network evidence most strongly supports the identified root cause: GigabitEthernet0/0.30 is administratively down.. The resulting decision confidence is 82% (HIGH).
+
+SUPPORTING EVIDENCE
+----------------------------------------------------------------------
+- VLAN 30 exists.
+- Trunk is active.
+
+CONTRADICTIONS
+----------------------------------------------------------------------
+- None detected.
+
+COMPETING DIAGNOSES
+----------------------------------------------------------------------
+1. case_01 - Inter-VLAN Routing - Router Subinterface Down (confidence=82%)
+2. case_02 - Wrong VLAN Assignment (confidence=61%)
+
+RECOMMENDED FIX
+----------------------------------------------------------------------
+  enable
+  configure terminal
+  interface GigabitEthernet0/0.30
+  no shutdown
+  end
+
+HUMAN REVIEW
+----------------------------------------------------------------------
+{'reviewed': True, 'approved': True, 'decision': 'APPROVED'}
+
+VERIFICATION
+----------------------------------------------------------------------
+{'verified': True, 'verification_score': 100}
+
+SAFETY
+----------------------------------------------------------------------
+Automatic configuration applied: FALSE
+Human approval required: TRUE
+
+AUDIT
+----------------------------------------------------------------------
+Audit file: data/responsible_ai_log.json
+
+======================================================================
+              PHASE 8 COMPLETE
+======================================================================

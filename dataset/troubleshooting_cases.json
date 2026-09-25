@@ -1,0 +1,979 @@
+{
+  "project": "NetSage AI",
+  "version": "1.0",
+  "cases": [
+    {
+      "case_id": "case_01",
+      "title": "Inter-VLAN Routing - Router Subinterface Down",
+      "problem": "PC0 cannot communicate with the server in VLAN 30.",
+      "symptoms": [
+        "PC0 can ping its VLAN 10 gateway.",
+        "PC0 cannot ping 192.168.30.10.",
+        "VLAN 30 is active.",
+        "The VLAN 30 router subinterface is administratively down."
+      ],
+      "show_commands": {
+        "show_ip_interface_brief": "GigabitEthernet0/0.10 192.168.10.1 up up; GigabitEthernet0/0.30 192.168.30.1 administratively down down",
+        "show_vlan_brief": "VLAN 10 USERS: Fa0/1; VLAN 30 SERVERS: Fa0/2",
+        "show_interfaces_trunk": "Gig0/1 is trunking with 802.1q; VLANs 10,30 are allowed and active"
+      },
+      "root_cause": "GigabitEthernet0/0.30 is administratively shut down.",
+      "evidence": [
+        "VLAN 30 exists and is active.",
+        "The trunk permits VLAN 30.",
+        "The VLAN 30 router subinterface is administratively down."
+      ],
+      "recommended_fix": [
+        "enable",
+        "configure terminal",
+        "interface GigabitEthernet0/0.30",
+        "no shutdown",
+        "end"
+      ],
+      "verification": [
+        "show ip interface brief",
+        "ping 192.168.30.10"
+      ],
+      "expected_result": "The subinterface becomes up/up and the server becomes reachable.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "Inter-VLAN Routing",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_02",
+      "title": "Wrong VLAN Assignment",
+      "problem": "A user PC is connected to the wrong access VLAN.",
+      "symptoms": [
+        "PC0 is connected to Fa0/1.",
+        "PC0 should belong to VLAN 10.",
+        "Fa0/1 is assigned to VLAN 30.",
+        "Expected VLAN 10 connectivity is unavailable."
+      ],
+      "show_commands": {
+        "show_vlan_brief": "VLAN 30 SERVERS: Fa0/1; VLAN 10 USERS: Fa0/2",
+        "show_running_config": "interface Fa0/1; switchport mode access; switchport access vlan 30"
+      },
+      "root_cause": "Fa0/1 is assigned to VLAN 30 instead of VLAN 10.",
+      "evidence": [
+        "PC0 uses Fa0/1.",
+        "Fa0/1 is in VLAN 30.",
+        "The intended user VLAN is VLAN 10."
+      ],
+      "recommended_fix": [
+        "enable",
+        "configure terminal",
+        "interface fastEthernet 0/1",
+        "switchport access vlan 10",
+        "end"
+      ],
+      "verification": [
+        "show vlan brief",
+        "ping 192.168.10.1"
+      ],
+      "expected_result": "Fa0/1 appears in VLAN 10 and PC0 regains VLAN 10 connectivity.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "VLAN",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_03",
+      "title": "Wrong Default Gateway",
+      "problem": "PC0 cannot reach a remote subnet.",
+      "symptoms": [
+        "PC0 IP is 192.168.10.10/24.",
+        "Router VLAN 10 gateway is 192.168.10.1.",
+        "PC0 uses 192.168.10.254 as its gateway.",
+        "Remote server ping fails."
+      ],
+      "show_commands": {
+        "show_ip_interface_brief": "GigabitEthernet0/0.10 192.168.10.1 up up; GigabitEthernet0/0.30 192.168.30.1 up up"
+      },
+      "root_cause": "PC0 has the wrong default gateway.",
+      "evidence": [
+        "PC subnet is 192.168.10.0/24.",
+        "Correct gateway is 192.168.10.1.",
+        "Configured gateway is 192.168.10.254."
+      ],
+      "recommended_fix": [
+        "Open PC0",
+        "Open Desktop > IP Configuration",
+        "Set Default Gateway to 192.168.10.1"
+      ],
+      "verification": [
+        "ping 192.168.10.1",
+        "ping 192.168.30.10"
+      ],
+      "expected_result": "PC0 can route traffic to remote networks.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "Default Gateway",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_04",
+      "title": "Wrong Server IP Address",
+      "problem": "Server is configured with an incorrect IP address.",
+      "symptoms": [
+        "Observed configuration/evidence: 192.168.30.99.",
+        "Expected configuration/evidence: 192.168.30.10.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip interface brief": "Observed: 192.168.30.99; expected: 192.168.30.10."
+      },
+      "root_cause": "The configuration is incorrect: 192.168.30.99.",
+      "evidence": [
+        "show ip interface brief shows the faulty value: 192.168.30.99.",
+        "The expected value is: 192.168.30.10.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 192.168.30.99 to 192.168.30.10.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip interface brief",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 192.168.30.10 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "IP Addressing",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_05",
+      "title": "Trunk VLAN Not Allowed",
+      "problem": "VLAN 30 traffic cannot cross the switch trunk.",
+      "symptoms": [
+        "Observed configuration/evidence: 1,10.",
+        "Expected configuration/evidence: 1,10,30.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show interfaces trunk": "Observed: 1,10; expected: 1,10,30."
+      },
+      "root_cause": "The configuration is incorrect: 1,10.",
+      "evidence": [
+        "show interfaces trunk shows the faulty value: 1,10.",
+        "The expected value is: 1,10,30.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 1,10 to 1,10,30.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show interfaces trunk",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 1,10,30 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "Trunking",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_06",
+      "title": "Access Port Wrong VLAN",
+      "problem": "A printer cannot reach devices in its expected VLAN.",
+      "symptoms": [
+        "Observed configuration/evidence: 20.",
+        "Expected configuration/evidence: 30.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show vlan brief": "Observed: 20; expected: 30."
+      },
+      "root_cause": "The configuration is incorrect: 20.",
+      "evidence": [
+        "show vlan brief shows the faulty value: 20.",
+        "The expected value is: 30.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 20 to 30.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show vlan brief",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 30 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "VLAN Assignment",
+      "severity": "Medium"
+    },
+    {
+      "case_id": "case_07",
+      "title": "Interface Administratively Down",
+      "problem": "A router LAN interface is shut down.",
+      "symptoms": [
+        "Observed configuration/evidence: administratively down.",
+        "Expected configuration/evidence: up.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip interface brief": "Observed: administratively down; expected: up."
+      },
+      "root_cause": "The configuration is incorrect: administratively down.",
+      "evidence": [
+        "show ip interface brief shows the faulty value: administratively down.",
+        "The expected value is: up.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from administratively down to up.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip interface brief",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show up and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 1/3",
+      "concept": "Interface State",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_08",
+      "title": "Wrong Trunk Encapsulation",
+      "problem": "The trunk uses an incompatible encapsulation configuration.",
+      "symptoms": [
+        "Observed configuration/evidence: isl.",
+        "Expected configuration/evidence: 802.1q.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show interfaces trunk": "Observed: isl; expected: 802.1q."
+      },
+      "root_cause": "The configuration is incorrect: isl.",
+      "evidence": [
+        "show interfaces trunk shows the faulty value: isl.",
+        "The expected value is: 802.1q.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from isl to 802.1q.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show interfaces trunk",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 802.1q and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "802.1Q Trunking",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_09",
+      "title": "Missing VLAN",
+      "problem": "Hosts in VLAN 40 cannot communicate because VLAN 40 is absent.",
+      "symptoms": [
+        "Observed configuration/evidence: VLAN 40 absent.",
+        "Expected configuration/evidence: VLAN 40 active.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show vlan brief": "Observed: VLAN 40 absent; expected: VLAN 40 active."
+      },
+      "root_cause": "The configuration is incorrect: VLAN 40 absent.",
+      "evidence": [
+        "show vlan brief shows the faulty value: VLAN 40 absent.",
+        "The expected value is: VLAN 40 active.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from VLAN 40 absent to VLAN 40 active.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show vlan brief",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show VLAN 40 active and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "VLAN",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_10",
+      "title": "DHCP Pool Missing",
+      "problem": "Clients receive no DHCP address.",
+      "symptoms": [
+        "Observed configuration/evidence: No matching pool.",
+        "Expected configuration/evidence: Pool for 192.168.40.0/24.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip dhcp pool": "Observed: No matching pool; expected: Pool for 192.168.40.0/24."
+      },
+      "root_cause": "The configuration is incorrect: No matching pool.",
+      "evidence": [
+        "show ip dhcp pool shows the faulty value: No matching pool.",
+        "The expected value is: Pool for 192.168.40.0/24.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from No matching pool to Pool for 192.168.40.0/24.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip dhcp pool",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Pool for 192.168.40.0/24 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 7",
+      "concept": "DHCP",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_11",
+      "title": "DHCP Excluded Range Error",
+      "problem": "DHCP has no usable addresses because the entire subnet is excluded.",
+      "symptoms": [
+        "Observed configuration/evidence: 192.168.40.1-254 excluded.",
+        "Expected configuration/evidence: Only gateway/reserved addresses excluded.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip dhcp excluded-address": "Observed: 192.168.40.1-254 excluded; expected: Only gateway/reserved addresses excluded."
+      },
+      "root_cause": "The configuration is incorrect: 192.168.40.1-254 excluded.",
+      "evidence": [
+        "show ip dhcp excluded-address shows the faulty value: 192.168.40.1-254 excluded.",
+        "The expected value is: Only gateway/reserved addresses excluded.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 192.168.40.1-254 excluded to Only gateway/reserved addresses excluded.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip dhcp excluded-address",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Only gateway/reserved addresses excluded and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 7",
+      "concept": "DHCP",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_12",
+      "title": "Wrong DHCP Default Router",
+      "problem": "Clients receive an incorrect gateway from DHCP.",
+      "symptoms": [
+        "Observed configuration/evidence: 192.168.40.254.",
+        "Expected configuration/evidence: 192.168.40.1.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show running-config | section dhcp": "Observed: 192.168.40.254; expected: 192.168.40.1."
+      },
+      "root_cause": "The configuration is incorrect: 192.168.40.254.",
+      "evidence": [
+        "show running-config | section dhcp shows the faulty value: 192.168.40.254.",
+        "The expected value is: 192.168.40.1.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 192.168.40.254 to 192.168.40.1.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show running-config | section dhcp",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 192.168.40.1 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3/7",
+      "concept": "DHCP",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_13",
+      "title": "DNS Server Misconfigured",
+      "problem": "Clients can ping an IP but cannot resolve a hostname.",
+      "symptoms": [
+        "Observed configuration/evidence: 8.8.8.8.",
+        "Expected configuration/evidence: 192.168.40.10.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "ipconfig /all": "Observed: 8.8.8.8; expected: 192.168.40.10."
+      },
+      "root_cause": "The configuration is incorrect: 8.8.8.8.",
+      "evidence": [
+        "ipconfig /all shows the faulty value: 8.8.8.8.",
+        "The expected value is: 192.168.40.10.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 8.8.8.8 to 192.168.40.10.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "ipconfig /all",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 192.168.40.10 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 7",
+      "concept": "DNS",
+      "severity": "Medium"
+    },
+    {
+      "case_id": "case_14",
+      "title": "Static Route Missing",
+      "problem": "A router has no route to a remote LAN.",
+      "symptoms": [
+        "Observed configuration/evidence: No 192.168.50.0/24 route.",
+        "Expected configuration/evidence: 192.168.50.0/24 via 10.0.0.2.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip route": "Observed: No 192.168.50.0/24 route; expected: 192.168.50.0/24 via 10.0.0.2."
+      },
+      "root_cause": "The configuration is incorrect: No 192.168.50.0/24 route.",
+      "evidence": [
+        "show ip route shows the faulty value: No 192.168.50.0/24 route.",
+        "The expected value is: 192.168.50.0/24 via 10.0.0.2.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from No 192.168.50.0/24 route to 192.168.50.0/24 via 10.0.0.2.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip route",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 192.168.50.0/24 via 10.0.0.2 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "Static Routing",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_15",
+      "title": "Wrong Static Route Next Hop",
+      "problem": "Traffic is sent toward the wrong next hop.",
+      "symptoms": [
+        "Observed configuration/evidence: 10.0.0.9.",
+        "Expected configuration/evidence: 10.0.0.2.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip route": "Observed: 10.0.0.9; expected: 10.0.0.2."
+      },
+      "root_cause": "The configuration is incorrect: 10.0.0.9.",
+      "evidence": [
+        "show ip route shows the faulty value: 10.0.0.9.",
+        "The expected value is: 10.0.0.2.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 10.0.0.9 to 10.0.0.2.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip route",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 10.0.0.2 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "Routing",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_16",
+      "title": "Default Route Missing",
+      "problem": "Internet-bound traffic has no default route.",
+      "symptoms": [
+        "Observed configuration/evidence: Gateway of last resort not set.",
+        "Expected configuration/evidence: 0.0.0.0/0 via 10.0.0.1.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip route": "Observed: Gateway of last resort not set; expected: 0.0.0.0/0 via 10.0.0.1."
+      },
+      "root_cause": "The configuration is incorrect: Gateway of last resort not set.",
+      "evidence": [
+        "show ip route shows the faulty value: Gateway of last resort not set.",
+        "The expected value is: 0.0.0.0/0 via 10.0.0.1.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from Gateway of last resort not set to 0.0.0.0/0 via 10.0.0.1.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip route",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 0.0.0.0/0 via 10.0.0.1 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "Default Route",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_17",
+      "title": "OSPF Network Statement Missing",
+      "problem": "An OSPF neighbor route is not advertised.",
+      "symptoms": [
+        "Observed configuration/evidence: LAN absent from OSPF.",
+        "Expected configuration/evidence: LAN included in OSPF.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip protocols": "Observed: LAN absent from OSPF; expected: LAN included in OSPF."
+      },
+      "root_cause": "The configuration is incorrect: LAN absent from OSPF.",
+      "evidence": [
+        "show ip protocols shows the faulty value: LAN absent from OSPF.",
+        "The expected value is: LAN included in OSPF.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from LAN absent from OSPF to LAN included in OSPF.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip protocols",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show LAN included in OSPF and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "OSPF",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_18",
+      "title": "OSPF Area Mismatch",
+      "problem": "Two routers fail to form an OSPF adjacency.",
+      "symptoms": [
+        "Observed configuration/evidence: Area 0.",
+        "Expected configuration/evidence: Area 1 on one side.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip ospf interface": "Observed: Area 0; expected: Area 1 on one side."
+      },
+      "root_cause": "The configuration is incorrect: Area 0.",
+      "evidence": [
+        "show ip ospf interface shows the faulty value: Area 0.",
+        "The expected value is: Area 1 on one side.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from Area 0 to Area 1 on one side.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip ospf interface",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Area 1 on one side and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "OSPF",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_19",
+      "title": "ACL Blocks ICMP",
+      "problem": "A security ACL blocks ping traffic to a server.",
+      "symptoms": [
+        "Observed configuration/evidence: deny icmp.",
+        "Expected configuration/evidence: permit required traffic.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show access-lists": "Observed: deny icmp; expected: permit required traffic."
+      },
+      "root_cause": "The configuration is incorrect: deny icmp.",
+      "evidence": [
+        "show access-lists shows the faulty value: deny icmp.",
+        "The expected value is: permit required traffic.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from deny icmp to permit required traffic.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show access-lists",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show permit required traffic and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3/4",
+      "concept": "ACL",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_20",
+      "title": "ACL Applied to Wrong Interface",
+      "problem": "A valid ACL is applied in the wrong direction/interface.",
+      "symptoms": [
+        "Observed configuration/evidence: ACL inbound on LAN.",
+        "Expected configuration/evidence: ACL should be applied on WAN.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip interface": "Observed: ACL inbound on LAN; expected: ACL should be applied on WAN."
+      },
+      "root_cause": "The configuration is incorrect: ACL inbound on LAN.",
+      "evidence": [
+        "show ip interface shows the faulty value: ACL inbound on LAN.",
+        "The expected value is: ACL should be applied on WAN.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from ACL inbound on LAN to ACL should be applied on WAN.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip interface",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show ACL should be applied on WAN and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3/4",
+      "concept": "ACL",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_21",
+      "title": "NAT Inside Missing",
+      "problem": "Inside clients are not translated for outbound traffic.",
+      "symptoms": [
+        "Observed configuration/evidence: No ip nat inside.",
+        "Expected configuration/evidence: ip nat inside configured.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip nat translations": "Observed: No ip nat inside; expected: ip nat inside configured."
+      },
+      "root_cause": "The configuration is incorrect: No ip nat inside.",
+      "evidence": [
+        "show ip nat translations shows the faulty value: No ip nat inside.",
+        "The expected value is: ip nat inside configured.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from No ip nat inside to ip nat inside configured.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip nat translations",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show ip nat inside configured and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "NAT",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_22",
+      "title": "NAT Outside Missing",
+      "problem": "NAT translations fail because the WAN interface is not marked outside.",
+      "symptoms": [
+        "Observed configuration/evidence: inside only.",
+        "Expected configuration/evidence: inside + outside.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show running-config": "Observed: inside only; expected: inside + outside."
+      },
+      "root_cause": "The configuration is incorrect: inside only.",
+      "evidence": [
+        "show running-config shows the faulty value: inside only.",
+        "The expected value is: inside + outside.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from inside only to inside + outside.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show running-config",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show inside + outside and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "NAT",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_23",
+      "title": "PAT ACL Mismatch",
+      "problem": "PAT does not translate the intended client subnet.",
+      "symptoms": [
+        "Observed configuration/evidence: ACL matches 192.168.99.0/24.",
+        "Expected configuration/evidence: Clients use 192.168.60.0/24.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show access-lists": "Observed: ACL matches 192.168.99.0/24; expected: Clients use 192.168.60.0/24."
+      },
+      "root_cause": "The configuration is incorrect: ACL matches 192.168.99.0/24.",
+      "evidence": [
+        "show access-lists shows the faulty value: ACL matches 192.168.99.0/24.",
+        "The expected value is: Clients use 192.168.60.0/24.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from ACL matches 192.168.99.0/24 to Clients use 192.168.60.0/24.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show access-lists",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Clients use 192.168.60.0/24 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "PAT",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_24",
+      "title": "Wireless SSID Mismatch",
+      "problem": "A wireless client cannot join the intended network.",
+      "symptoms": [
+        "Observed configuration/evidence: NETSAGE-GUEST.",
+        "Expected configuration/evidence: NETSAGE-STAFF.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show wlan / wireless settings": "Observed: NETSAGE-GUEST; expected: NETSAGE-STAFF."
+      },
+      "root_cause": "The configuration is incorrect: NETSAGE-GUEST.",
+      "evidence": [
+        "show wlan / wireless settings shows the faulty value: NETSAGE-GUEST.",
+        "The expected value is: NETSAGE-STAFF.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from NETSAGE-GUEST to NETSAGE-STAFF.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show wlan / wireless settings",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show NETSAGE-STAFF and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "Wireless",
+      "severity": "Medium"
+    },
+    {
+      "case_id": "case_25",
+      "title": "Wireless Security Key Mismatch",
+      "problem": "The client repeatedly fails wireless authentication.",
+      "symptoms": [
+        "Observed configuration/evidence: Wrong pre-shared key.",
+        "Expected configuration/evidence: Correct WPA2 key.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "wireless security settings": "Observed: Wrong pre-shared key; expected: Correct WPA2 key."
+      },
+      "root_cause": "The configuration is incorrect: Wrong pre-shared key.",
+      "evidence": [
+        "wireless security settings shows the faulty value: Wrong pre-shared key.",
+        "The expected value is: Correct WPA2 key.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from Wrong pre-shared key to Correct WPA2 key.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "wireless security settings",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Correct WPA2 key and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "Wireless Security",
+      "severity": "Medium"
+    },
+    {
+      "case_id": "case_26",
+      "title": "Guest VLAN Mapping Error",
+      "problem": "Guest clients are placed into the internal users VLAN.",
+      "symptoms": [
+        "Observed configuration/evidence: Guest SSID -> VLAN 10.",
+        "Expected configuration/evidence: Guest SSID -> VLAN 50.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show vlan brief": "Observed: Guest SSID -> VLAN 10; expected: Guest SSID -> VLAN 50."
+      },
+      "root_cause": "The configuration is incorrect: Guest SSID -> VLAN 10.",
+      "evidence": [
+        "show vlan brief shows the faulty value: Guest SSID -> VLAN 10.",
+        "The expected value is: Guest SSID -> VLAN 50.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from Guest SSID -> VLAN 10 to Guest SSID -> VLAN 50.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show vlan brief",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Guest SSID -> VLAN 50 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "Wireless VLAN Mapping",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_27",
+      "title": "Duplicate IP Address",
+      "problem": "Two hosts use the same IPv4 address.",
+      "symptoms": [
+        "Observed configuration/evidence: PC0 and PC1 both use 192.168.60.10.",
+        "Expected configuration/evidence: Each host has a unique IP.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show ip arp": "Observed: PC0 and PC1 both use 192.168.60.10; expected: Each host has a unique IP."
+      },
+      "root_cause": "The configuration is incorrect: PC0 and PC1 both use 192.168.60.10.",
+      "evidence": [
+        "show ip arp shows the faulty value: PC0 and PC1 both use 192.168.60.10.",
+        "The expected value is: Each host has a unique IP.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from PC0 and PC1 both use 192.168.60.10 to Each host has a unique IP.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show ip arp",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Each host has a unique IP and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "IP Addressing",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_28",
+      "title": "Wrong Subnet Mask",
+      "problem": "A host uses a mask that places it in the wrong subnet.",
+      "symptoms": [
+        "Observed configuration/evidence: 255.255.0.0.",
+        "Expected configuration/evidence: 255.255.255.0.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "ipconfig": "Observed: 255.255.0.0; expected: 255.255.255.0."
+      },
+      "root_cause": "The configuration is incorrect: 255.255.0.0.",
+      "evidence": [
+        "ipconfig shows the faulty value: 255.255.0.0.",
+        "The expected value is: 255.255.255.0.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from 255.255.0.0 to 255.255.255.0.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "ipconfig",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show 255.255.255.0 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 3",
+      "concept": "Subnetting",
+      "severity": "High"
+    },
+    {
+      "case_id": "case_29",
+      "title": "Switch Port Shutdown",
+      "problem": "A connected PC has no link because its switch port is disabled.",
+      "symptoms": [
+        "Observed configuration/evidence: Fa0/10 administratively down.",
+        "Expected configuration/evidence: Fa0/10 up/up.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show interfaces status": "Observed: Fa0/10 administratively down; expected: Fa0/10 up/up."
+      },
+      "root_cause": "The configuration is incorrect: Fa0/10 administratively down.",
+      "evidence": [
+        "show interfaces status shows the faulty value: Fa0/10 administratively down.",
+        "The expected value is: Fa0/10 up/up.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from Fa0/10 administratively down to Fa0/10 up/up.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show interfaces status",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Fa0/10 up/up and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 1/2",
+      "concept": "Switch Interface",
+      "severity": "Medium"
+    },
+    {
+      "case_id": "case_30",
+      "title": "Native VLAN Mismatch",
+      "problem": "A trunk reports a native VLAN mismatch.",
+      "symptoms": [
+        "Observed configuration/evidence: Native VLAN 1 vs 99.",
+        "Expected configuration/evidence: Both sides use VLAN 99.",
+        "Connectivity or service behavior is inconsistent with the expected configuration."
+      ],
+      "show_commands": {
+        "show interfaces trunk": "Observed: Native VLAN 1 vs 99; expected: Both sides use VLAN 99."
+      },
+      "root_cause": "The configuration is incorrect: Native VLAN 1 vs 99.",
+      "evidence": [
+        "show interfaces trunk shows the faulty value: Native VLAN 1 vs 99.",
+        "The expected value is: Both sides use VLAN 99.",
+        "The symptom is consistent with this configuration fault."
+      ],
+      "recommended_fix": [
+        "Correct the configuration from Native VLAN 1 vs 99 to Both sides use VLAN 99.",
+        "Save the corrected configuration after human review."
+      ],
+      "verification": [
+        "show interfaces trunk",
+        "Repeat the affected connectivity/service test."
+      ],
+      "expected_result": "The configuration should show Both sides use VLAN 99 and the affected service should work normally.",
+      "human_review_required": true,
+      "osi_layer": "Layer 2",
+      "concept": "Trunking",
+      "severity": "High"
+    }
+  ]
+}

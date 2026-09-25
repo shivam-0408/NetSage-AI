@@ -1,0 +1,163 @@
+{
+    "report_version": "1.0",
+    "generated_at": "2026-08-28T13:49:15.996142",
+    "system": {
+        "name": "NetSage AI",
+        "phase": "Phase 8",
+        "module": "Explainability and Reporting"
+    },
+    "incident": {
+        "case_id": "UNKNOWN",
+        "title": "Unknown Case",
+        "problem": "Unknown",
+        "root_cause": "Unknown",
+        "confidence": 0.0
+    },
+    "decision": {
+        "status": "LOW-CONFIDENCE DIAGNOSIS",
+        "confidence": 0.0,
+        "confidence_level": "LOW",
+        "match_score": 0,
+        "adaptive_confidence": 0.0
+    },
+    "explanation": {
+        "why_selected": [],
+        "supporting_evidence": [],
+        "contradictions": [],
+        "reasoning": "NetSage AI selected 'Unknown Case' because the available network evidence most strongly supports the identified root cause: Unknown. The resulting decision confidence is 0.0% (LOW)."
+    },
+    "competing_diagnoses": [],
+    "recommended_fix": [],
+    "verification": {
+        "phase": "Phase 11",
+        "generated_at": "2026-08-28T13:49:15.993984",
+        "health_score": 0,
+        "health_level": "CRITICAL",
+        "risk_score": 100,
+        "risk_level": "CRITICAL",
+        "priority": "P1 - IMMEDIATE",
+        "finding_count": 6,
+        "severity_summary": {
+            "critical": 1,
+            "high": 5,
+            "moderate": 0
+        },
+        "findings": [
+            {
+                "type": "PING_FAILURE",
+                "severity": "HIGH",
+                "message": "Destination 192.168.30.10 has 100% packet loss."
+            },
+            {
+                "type": "ADMINISTRATIVELY_DOWN",
+                "severity": "CRITICAL",
+                "message": "GigabitEthernet0/0.30 is administratively down."
+            },
+            {
+                "type": "PROTOCOL_DOWN",
+                "severity": "HIGH",
+                "message": "GigabitEthernet0/0.30 protocol is down."
+            },
+            {
+                "type": "FAULT_INDICATOR",
+                "severity": "HIGH",
+                "message": "Interface administratively down"
+            },
+            {
+                "type": "FAULT_INDICATOR",
+                "severity": "HIGH",
+                "message": "100% packet loss"
+            },
+            {
+                "type": "FAULT_INDICATOR",
+                "severity": "HIGH",
+                "message": "Destination host unreachable"
+            }
+        ],
+        "priority_actions": [
+            "Investigate the path to the unreachable destination.",
+            "Review the affected interface and determine whether it should be enabled.",
+            "Investigate interface protocol state and Layer 2/Layer 3 connectivity.",
+            "Review the reported fault indicator against the complete network evidence."
+        ],
+        "safety": {
+            "allowed": true,
+            "status": "READY_FOR_HUMAN_REVIEW",
+            "confidence": 0.0,
+            "risk_score": 100.0,
+            "human_approval_required": true,
+            "automatic_execution": false,
+            "automatic_configuration_applied": false,
+            "reasons": [
+                "Human approval is required before any configuration change."
+            ]
+        }
+    },
+    "human_review": {
+        "remediation": {
+            "phase": "Phase 12",
+            "generated_at": "2026-08-28T13:49:15.994738",
+            "status": "READY_FOR_HUMAN_REVIEW",
+            "incident": {
+                "case_id": "UNKNOWN",
+                "title": "Unknown Case"
+            },
+            "diagnosis": {
+                "confidence": 0.0
+            },
+            "confidence": 0.0,
+            "confidence_level": "LOW",
+            "risk": {
+                "score": 100,
+                "level": "CRITICAL"
+            },
+            "remediation": {
+                "action": "Review Recommended Fix",
+                "risk_level": "MODERATE",
+                "commands": [],
+                "verification": [
+                    "Repeat relevant diagnostic checks",
+                    "Confirm service connectivity"
+                ]
+            },
+            "safety": {
+                "allowed": true,
+                "status": "READY_FOR_HUMAN_REVIEW",
+                "human_approval_required": true,
+                "human_approval_received": false,
+                "automatic_execution": false,
+                "automatic_configuration_applied": false,
+                "reasons": [
+                    "Network risk is critical; human review is mandatory.",
+                    "Diagnostic confidence does not meet the threshold for independent action.",
+                    "Human approval has not been provided."
+                ],
+                "warnings": [
+                    "Automatic network configuration execution is disabled by policy.",
+                    "Proposed commands are recommendations for human review only."
+                ]
+            }
+        },
+        "safety": {
+            "allowed": true,
+            "status": "READY_FOR_HUMAN_REVIEW",
+            "confidence": 0.0,
+            "risk_score": 100.0,
+            "human_approval_required": true,
+            "automatic_execution": false,
+            "automatic_configuration_applied": false,
+            "reasons": [
+                "Human approval is required before any configuration change."
+            ]
+        }
+    },
+    "safety": {
+        "automatic_configuration_applied": false,
+        "human_approval_required": true
+    },
+    "audit": {
+        "audit_file": null
+    },
+    "phase": "Phase 13",
+    "incident_id": "incident_20260828_134915"
+}
